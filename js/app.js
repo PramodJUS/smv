@@ -6,15 +6,17 @@ let currentLanguage = 'sa';
 let currentView = 'list';
 let currentSloka = null; // Track current sloka being viewed
 
-// Readability settings
-let fontSize = 1.15; // rem
-let lineSpacing = 2;
+// Readability settings - larger default for recitation
+let fontSize = 1.3; // rem
+let lineSpacing = 1.6;
 
 // Pratika identifier instance
 let pratikaIdentifier = null;
 
 // Commentary visibility settings
 let visibleCommentaries = {
+    'Meaning - English': true,
+    'Meaning - Kannada': false,
     'भावप्रकाशिका': true,
     'पदार्थदीपिकोद्बोधिका': true,
     'मन्दोपाकारिणी': true
@@ -138,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupKeyboardShortcuts();
     loadCommentarySettings();
     setupHeaderCommentaryDropdown();
+    loadMeaningPreference();
 });
 
 // Setup event listeners
@@ -188,6 +191,12 @@ function setupEventListeners() {
     if (headerToggleBtn) {
         headerToggleBtn.addEventListener('click', toggleHeader);
     }
+
+    // Add meaning toggle button functionality
+    const meaningToggleBtn = document.getElementById('meaningToggleBtn');
+    if (meaningToggleBtn) {
+        meaningToggleBtn.addEventListener('click', toggleMeanings);
+    }
 }
 
 // Handle language change
@@ -209,16 +218,27 @@ function handleLanguageChange() {
 // Update UI language
 function updateUILanguage() {
     const lang = languages[currentLanguage] || languages['sa'];
-    
+
     if (searchInput) {
         searchInput.placeholder = lang.searchPlaceholder;
     }
-    
+
     if (backButton) {
         backButton.textContent = lang.backToList;
     }
-    
+
     document.querySelector('footer p').textContent = lang.footer;
+
+    // Transliterate the main title
+    const headerTitle = document.querySelector('.header-content h1');
+    if (headerTitle) {
+        const originalTitle = 'सुमध्वविजयः';
+        if (currentLanguage === 'sa') {
+            headerTitle.textContent = originalTitle;
+        } else {
+            headerTitle.textContent = transliterateText(originalTitle, currentLanguage);
+        }
+    }
 }
 
 // Load slokas from CSV/JSON
@@ -371,12 +391,28 @@ function displaySlokas(slokas) {
             console.error('Transliteration error:', e);
         }
         
+        // Get meaning based on current language
+        let meaning = '';
+        if (currentLanguage === 'sa' || currentLanguage === 'en') {
+            meaning = sloka.meaning;
+        } else if (currentLanguage === 'kn') {
+            meaning = sloka.meaningKn || sloka.meaning;
+        } else if (currentLanguage === 'te') {
+            meaning = sloka.meaningTe || sloka.meaning;
+        } else {
+            meaning = sloka.meaning;
+        }
+
+        // Format sloka number with zero padding (e.g., "01-01")
+        const sargaPadded = String(sloka.sarga).padStart(2, '0');
+        const slokaPadded = String(sloka.sloka_number).padStart(2, '0');
+
         slokaCard.innerHTML = `
-            <div class="sloka-number">Sarga ${sloka.sarga}, Sloka ${sloka.sloka_number}</div>
+            <div class="sloka-number">${sargaPadded}-${slokaPadded}</div>
             <div class="sloka-text">${slokaText.replace(/\n/g, '<br>')}</div>
-            ${sloka.meaning ? `<div class="sloka-meaning">${sloka.meaning}</div>` : ''}
+            ${meaning ? `<div class="sloka-meaning">${meaning}</div>` : ''}
         `;
-        
+
         slokaCard.addEventListener('click', () => showSlokaDetail(sloka));
         slokaList.appendChild(slokaCard);
     });
@@ -406,6 +442,8 @@ function showSlokaDetail(sloka) {
     // Build commentaries HTML
     let commentariesHTML = '';
     const commentaryNames = {
+        'Meaning - English': 'Meaning - English',
+        'Meaning - Kannada': 'Meaning - Kannada',
         'भावप्रकाशिका': 'Bhavaprakashika',
         'पदार्थदीपिकोद्बोधिका': 'Padarthadeepikodbhodhika',
         'मन्दोपाकारिणी': 'Mandopakarini'
@@ -902,8 +940,10 @@ function setupKeyboardShortcuts() {
 function setupReadabilityControls() {
     const increaseFontBtn = document.getElementById('increaseFont');
     const decreaseFontBtn = document.getElementById('decreaseFont');
+    const resetFontBtn = document.getElementById('resetFont');
     const increaseSpacingBtn = document.getElementById('increaseSpacing');
     const decreaseSpacingBtn = document.getElementById('decreaseSpacing');
+    const resetSpacingBtn = document.getElementById('resetSpacing');
     const themeSelect = document.getElementById('themeSelect');
 
     if (increaseFontBtn) {
@@ -916,6 +956,13 @@ function setupReadabilityControls() {
     if (decreaseFontBtn) {
         decreaseFontBtn.addEventListener('click', () => {
             fontSize = Math.max(fontSize - 0.1, 0.8);
+            applyReadabilitySettings();
+        });
+    }
+
+    if (resetFontBtn) {
+        resetFontBtn.addEventListener('click', () => {
+            fontSize = 1.3; // Default font size
             applyReadabilitySettings();
         });
     }
@@ -934,6 +981,13 @@ function setupReadabilityControls() {
         });
     }
 
+    if (resetSpacingBtn) {
+        resetSpacingBtn.addEventListener('click', () => {
+            lineSpacing = 1.6; // Default line spacing
+            applyReadabilitySettings();
+        });
+    }
+
     if (themeSelect) {
         themeSelect.addEventListener('change', (e) => {
             applyTheme(e.target.value);
@@ -944,7 +998,7 @@ function setupReadabilityControls() {
 function applyReadabilitySettings() {
     document.documentElement.style.setProperty('--base-font-size', fontSize + 'rem');
     document.documentElement.style.setProperty('--line-height', lineSpacing);
-    
+
     // Save to localStorage
     localStorage.setItem('smvFontSize', fontSize);
     localStorage.setItem('smvLineSpacing', lineSpacing);
@@ -990,6 +1044,38 @@ function toggleHeader() {
         if (headerToggleBtn) {
             headerToggleBtn.textContent = isHidden ? '▼' : '▲';
             headerToggleBtn.title = isHidden ? 'Show header' : 'Hide header';
+        }
+    }
+}
+
+// Toggle meanings visibility
+function toggleMeanings() {
+    const meaningToggleBtn = document.getElementById('meaningToggleBtn');
+    const isShowing = document.body.classList.toggle('show-meanings');
+
+    if (meaningToggleBtn) {
+        if (isShowing) {
+            meaningToggleBtn.textContent = '📖 Hide Meanings';
+            meaningToggleBtn.classList.add('active');
+        } else {
+            meaningToggleBtn.textContent = '📖 Show Meanings';
+            meaningToggleBtn.classList.remove('active');
+        }
+    }
+
+    // Save preference
+    localStorage.setItem('smvShowMeanings', isShowing);
+}
+
+// Load meaning visibility preference
+function loadMeaningPreference() {
+    const showMeanings = localStorage.getItem('smvShowMeanings') === 'true';
+    if (showMeanings) {
+        document.body.classList.add('show-meanings');
+        const meaningToggleBtn = document.getElementById('meaningToggleBtn');
+        if (meaningToggleBtn) {
+            meaningToggleBtn.textContent = '📖 Hide Meanings';
+            meaningToggleBtn.classList.add('active');
         }
     }
 }

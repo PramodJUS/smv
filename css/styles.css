@@ -18,9 +18,9 @@
     --shadow-soft: 0 4px 20px rgba(212, 160, 86, 0.15);
     --shadow-medium: 0 8px 30px rgba(212, 160, 86, 0.2);
 
-    /* Readability controls */
-    --base-font-size: 1.15rem;
-    --line-height: 2;
+    /* Readability controls - larger for recitation */
+    --base-font-size: 1.3rem;
+    --line-height: 1.6;
 }
 
 /* Sepia theme */
@@ -230,6 +230,18 @@ header::after {
     background: var(--gold-lighter);
     border-color: var(--primary-gold);
     transform: scale(1.05);
+}
+
+.reset-btn {
+    background: var(--gold-lighter);
+    border-color: var(--primary-gold);
+    color: var(--primary-gold);
+    font-weight: 500;
+}
+
+.reset-btn:hover {
+    background: var(--primary-gold);
+    color: white;
 }
 
 #themeSelect {
@@ -563,6 +575,31 @@ header.header-hidden ~ main {
     display: flex;
     gap: 1rem;
     align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Meaning toggle button */
+.meaning-toggle-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.meaning-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: white;
+    transform: scale(1.05);
+}
+
+.meaning-toggle-btn.active {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: white;
 }
 
 .heading-audio-btn {
@@ -595,19 +632,21 @@ header.header-hidden ~ main {
 
 /* Sloka Cards */
 .sloka-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .sloka-card {
     background: linear-gradient(135deg, var(--bg-white) 0%, var(--gold-lighter) 100%);
-    padding: 1.8rem;
-    border-radius: 15px;
-    border: 2px solid var(--border-light);
+    padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 15px rgba(212, 160, 86, 0.1);
+    box-shadow: 0 2px 8px rgba(212, 160, 86, 0.08);
     position: relative;
     overflow: hidden;
 }
@@ -635,12 +674,24 @@ header.header-hidden ~ main {
 }
 
 .sloka-number {
-    font-weight: 400;
-    color: var(--primary-gold);
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
-    letter-spacing: 0.5px;
+    font-weight: 500;
+    color: white;
+    background: var(--accent-saffron);
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
     text-transform: uppercase;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: rotate(180deg);
+    width: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px 0 0 8px;
 }
 
 .sloka-text {
@@ -648,7 +699,59 @@ header.header-hidden ~ main {
     font-size: var(--base-font-size);
     line-height: var(--line-height);
     font-weight: 400;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
+    padding-left: 0.8rem;
+}
+
+/* Sloka meaning (hidden by default in recitation mode) */
+.sloka-meaning {
+    color: var(--text-medium);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    padding-left: 0.8rem;
+    border-top: 1px solid var(--border-light);
+    display: none; /* Hidden by default */
+}
+
+/* Show meanings when toggle is active */
+body.show-meanings .sloka-meaning {
+    display: block;
+}
+
+/* Currently playing sloka - bold and highlighted */
+.sloka-card.playing {
+    background: linear-gradient(135deg, var(--gold-lighter) 0%, var(--bg-white) 100%);
+    border-color: var(--primary-gold);
+    box-shadow: 0 8px 30px rgba(212, 160, 86, 0.3);
+    transform: scale(1.02);
+}
+
+.sloka-card.playing .sloka-text {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.sloka-card.playing::before {
+    content: "▶";
+    position: absolute;
+    left: 0.3rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    color: var(--accent-saffron);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: translateY(-50%) scale(1.1);
+    }
 }
 
 /* Detail View */
@@ -1061,11 +1164,20 @@ footer p {
     }
 
     .sloka-list {
-        grid-template-columns: 1fr;
+        max-width: 100%;
+    }
+
+    .sloka-card {
+        padding: 0.5rem 0.5rem 0.5rem 1.5rem;
     }
 }
 
 @media (max-width: 640px) {
+    :root {
+        --base-font-size: 1.2rem;
+        --line-height: 1.5;
+    }
+
     .header-content h1 {
         font-size: 1.8rem;
         letter-spacing: 2px;
@@ -1086,11 +1198,40 @@ footer p {
         flex-direction: column;
         text-align: center;
     }
+
+    .sloka-card {
+        padding: 0.4rem 0.4rem 0.4rem 1.3rem;
+    }
+
+    .sloka-number {
+        font-size: 0.7rem;
+        width: 1rem;
+    }
+
+    .sloka-text {
+        padding-left: 0.7rem;
+    }
+
+    .sloka-card.playing::before {
+        font-size: 1.2rem;
+        left: 0.2rem;
+        top: 0.8rem;
+    }
 }
 
 /* Smooth Scrolling */
 html {
     scroll-behavior: smooth;
+}
+
+/* Scroll padding to account for fixed header */
+html {
+    scroll-padding-top: 300px;
+}
+
+/* Reduce scroll padding when header is hidden */
+header.header-hidden ~ main {
+    scroll-padding-top: 80px;
 }
 
 /* Selection Color */
