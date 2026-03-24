@@ -139,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUILanguage();
     setupKeyboardShortcuts();
     loadCommentarySettings();
-    setupHeaderCommentaryDropdown();
     loadMeaningPreference();
 });
 
@@ -174,16 +173,36 @@ function setupEventListeners() {
         stopAudioBtn.addEventListener('click', stopRecitation);
     }
 
-    // Add panel toggle button functionality (on the panel itself)
-    const panelToggleBtn = document.getElementById('panelToggleBtn');
-    if (panelToggleBtn) {
-        panelToggleBtn.addEventListener('click', toggleInfoPanel);
-    }
-
     // Add home button functionality (Madhva image)
     const homeButton = document.getElementById('homeButton');
     if (homeButton) {
         homeButton.addEventListener('click', goToHome);
+    }
+
+    // Add modal functionality (info popup)
+    const headerTitle = document.querySelector('.header-title');
+    const infoModal = document.getElementById('infoModal');
+    const modalClose = document.getElementById('modalClose');
+
+    if (headerTitle && infoModal) {
+        headerTitle.addEventListener('click', () => {
+            infoModal.classList.add('show');
+        });
+    }
+
+    if (modalClose && infoModal) {
+        modalClose.addEventListener('click', () => {
+            infoModal.classList.remove('show');
+        });
+    }
+
+    // Close modal when clicking outside
+    if (infoModal) {
+        infoModal.addEventListener('click', (e) => {
+            if (e.target === infoModal) {
+                infoModal.classList.remove('show');
+            }
+        });
     }
 
     // Add header toggle button functionality
@@ -441,6 +460,7 @@ function showSlokaDetail(sloka) {
 
     // Build commentaries HTML
     let commentariesHTML = '';
+    let commentaryIndex = 0;
     const commentaryNames = {
         'Meaning - English': 'Meaning - English',
         'Meaning - Kannada': 'Meaning - Kannada',
@@ -495,9 +515,10 @@ function showSlokaDetail(sloka) {
 
             // Create unique ID for this commentary
             const commentaryId = `commentary-${englishName.toLowerCase().replace(/\s+/g, '-')}`;
+            const alternateClass = commentaryIndex % 2 === 0 ? 'commentary-even' : 'commentary-odd';
 
             commentariesHTML += `
-                <div class="detail-commentary">
+                <div class="detail-commentary ${alternateClass}">
                     <div class="sloka-header commentary-header" data-target="${commentaryId}">
                         <h3>${devanagariName} (${englishName})</h3>
                         <span class="collapse-arrow">▼</span>
@@ -507,6 +528,7 @@ function showSlokaDetail(sloka) {
                     </div>
                 </div>
             `;
+            commentaryIndex++;
         }
     }
 
@@ -520,6 +542,38 @@ function showSlokaDetail(sloka) {
     detailContent.innerHTML = `
         <div class="detail-header">
             <div class="detail-nav-buttons">
+                <div class="detail-commentary-selector">
+                    <button class="detail-commentary-btn" id="detailCommentaryBtn" title="Commentaries">
+                        📚
+                    </button>
+                    <div class="detail-commentary-dropdown" id="detailCommentaryDropdown">
+                        <label class="commentary-checkbox commentary-select-all">
+                            <input type="checkbox" id="selectAllCommentariesCheck">
+                            <strong>Select All</strong>
+                        </label>
+                        <div class="commentary-divider"></div>
+                        <label class="commentary-checkbox">
+                            <input type="checkbox" class="commentary-check" data-commentary="Meaning - English">
+                            📖 Meaning - English
+                        </label>
+                        <label class="commentary-checkbox">
+                            <input type="checkbox" class="commentary-check" data-commentary="Meaning - Kannada">
+                            📖 Meaning - Kannada
+                        </label>
+                        <label class="commentary-checkbox">
+                            <input type="checkbox" class="commentary-check" data-commentary="भावप्रकाशिका">
+                            भावप्रकाशिका (Bhavaprakashika)
+                        </label>
+                        <label class="commentary-checkbox">
+                            <input type="checkbox" class="commentary-check" data-commentary="पदार्थदीपिकोद्बोधिका">
+                            पदार्थदीपिकोद्बोधिका (Padarthadeepikodbhodhika)
+                        </label>
+                        <label class="commentary-checkbox">
+                            <input type="checkbox" class="commentary-check" data-commentary="मन्दोपाकारिणी">
+                            मन्दोपाकारिणी (Mandopakarini)
+                        </label>
+                    </div>
+                </div>
                 <button class="nav-btn" id="prevSlokaBtn" title="Previous Sloka" ${!hasPrev ? 'disabled' : ''}>
                     ←
                 </button>
@@ -555,6 +609,9 @@ function showSlokaDetail(sloka) {
             slokaDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     }
+
+    // Setup commentary dropdown for detail view
+    setupDetailCommentaryDropdown();
 
     // Setup collapsible commentaries
     setupCollapsibleCommentaries();
@@ -848,17 +905,32 @@ function saveCommentarySettings() {
 }
 
 // Setup commentary dropdown in header
-function setupHeaderCommentaryDropdown() {
-    const dropdownBtn = document.getElementById('headerCommentaryDropdownBtn');
-    const dropdownContent = document.getElementById('headerCommentaryDropdownContent');
+function setupDetailCommentaryDropdown() {
+    const dropdownBtn = document.getElementById('detailCommentaryBtn');
+    const dropdownContent = document.getElementById('detailCommentaryDropdown');
 
     if (dropdownBtn && dropdownContent) {
         // Set initial checkbox states
         const checkboxes = dropdownContent.querySelectorAll('.commentary-check');
+        const selectAllCheck = document.getElementById('selectAllCommentariesCheck');
+
         checkboxes.forEach(checkbox => {
             const commentaryName = checkbox.getAttribute('data-commentary');
             checkbox.checked = visibleCommentaries[commentaryName];
         });
+
+        // Update select all checkbox based on current state
+        const updateSelectAllCheckbox = () => {
+            if (selectAllCheck) {
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+
+                selectAllCheck.checked = allChecked;
+                selectAllCheck.indeterminate = someChecked && !allChecked;
+            }
+        };
+
+        updateSelectAllCheckbox();
 
         // Toggle dropdown
         dropdownBtn.addEventListener('click', (e) => {
@@ -866,12 +938,19 @@ function setupHeaderCommentaryDropdown() {
             dropdownContent.classList.toggle('show');
         });
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#headerCommentarySelector')) {
+        // Close dropdown when clicking outside and refresh view
+        let closeHandler = (e) => {
+            if (!e.target.closest('.detail-commentary-selector')) {
                 dropdownContent.classList.remove('show');
+
+                // Refresh detail view after dropdown closes
+                if (currentSloka) {
+                    showSlokaDetail(currentSloka);
+                }
             }
-        });
+        };
+
+        document.addEventListener('click', closeHandler);
 
         // Prevent dropdown from closing when clicking inside
         dropdownContent.addEventListener('click', (e) => {
@@ -886,14 +965,28 @@ function setupHeaderCommentaryDropdown() {
                 if (commentaryName) {
                     visibleCommentaries[commentaryName] = e.target.checked;
                     saveCommentarySettings();
-
-                    // Refresh detail view if we're viewing a sloka
-                    if (currentSloka) {
-                        showSlokaDetail(currentSloka);
-                    }
+                    updateSelectAllCheckbox();
                 }
             });
         });
+
+        // Handle Select All checkbox
+        if (selectAllCheck) {
+            selectAllCheck.addEventListener('change', (e) => {
+                e.stopPropagation();
+                const newState = selectAllCheck.checked;
+
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = newState;
+                    const commentaryName = checkbox.getAttribute('data-commentary');
+                    if (commentaryName) {
+                        visibleCommentaries[commentaryName] = newState;
+                    }
+                });
+
+                saveCommentarySettings();
+            });
+        }
     }
 }
 

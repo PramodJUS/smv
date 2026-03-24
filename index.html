@@ -10,63 +10,16 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <button class="header-toggle-btn" id="headerToggleBtn" title="Hide header">▲</button>
-
     <header>
         <button class="madhwa-icon" id="homeButton" title="Return to Home">
             <img src="images/madhwa.png" alt="Sri Madhvacharya">
         </button>
+        <h1 class="header-title">सुमध्वविजयः</h1>
         <div class="top-controls">
-            <div class="controls-right">
-                <div class="language-selector-top">
-                    <label for="language">Language:</label>
-                    <select id="language">
-                        <option value="sa">संस्कृतम् (Sanskrit)</option>
-                        <option value="en">English (Roman)</option>
-                        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-                        <option value="te">తెలుగు (Telugu)</option>
-                        <option value="ta">தமிழ் (Tamil)</option>
-                        <option value="ml">മലയാളം (Malayalam)</option>
-                        <option value="bn">বাংলা (Bengali)</option>
-                        <option value="gu">ગુજરાતી (Gujarati)</option>
-                        <option value="or">ଓଡ଼ିଆ (Odia)</option>
-                    </select>
-                </div>
-                <div class="commentary-selector" id="headerCommentarySelector">
-                    <button class="commentary-dropdown-btn" id="headerCommentaryDropdownBtn">
-                        📚 Commentaries
-                    </button>
-                    <div class="commentary-dropdown-content" id="headerCommentaryDropdownContent">
-                        <label class="commentary-checkbox">
-                            <input type="checkbox" class="commentary-check" data-commentary="Meaning - English">
-                            📖 Meaning - English
-                        </label>
-                        <label class="commentary-checkbox">
-                            <input type="checkbox" class="commentary-check" data-commentary="Meaning - Kannada">
-                            📖 Meaning - Kannada
-                        </label>
-                        <label class="commentary-checkbox">
-                            <input type="checkbox" class="commentary-check" data-commentary="भावप्रकाशिका">
-                            भावप्रकाशिका (Bhavaprakashika)
-                        </label>
-                        <label class="commentary-checkbox">
-                            <input type="checkbox" class="commentary-check" data-commentary="पदार्थदीपिकोद्बोधिका">
-                            पदार्थदीपिकोद्बोधिका (Padarthadeepikodbhodhika)
-                        </label>
-                        <label class="commentary-checkbox">
-                            <input type="checkbox" class="commentary-check" data-commentary="मन्दोपाकारिणी">
-                            मन्दोपाकारिणी (Mandopakarini)
-                        </label>
-                    </div>
-                </div>
-            </div>
             <div class="reading-controls">
-                <button class="control-btn" id="decreaseFont" title="Decrease font size">A−</button>
-                <button class="control-btn" id="increaseFont" title="Increase font size">A+</button>
-                <button class="control-btn reset-btn" id="resetFont" title="Reset to default font size">A↺</button>
-                <button class="control-btn" id="decreaseSpacing" title="Decrease line spacing">⇕−</button>
-                <button class="control-btn" id="increaseSpacing" title="Increase line spacing">⇕+</button>
-                <button class="control-btn reset-btn" id="resetSpacing" title="Reset to default spacing">⇕↺</button>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search slokas...">
+                </div>
                 <select id="themeSelect" title="Reading theme">
                     <option value="light">☀ Light</option>
                     <option value="sepia">📖 Sepia</option>
@@ -74,71 +27,75 @@
                 </select>
             </div>
         </div>
-        <div class="header-content">
-            <h1>सुमध्वविजयः</h1>
-            <p class="subtitle">Sumadhwa Vijaya - The Life of Sri Madhvacharya</p>
-            <p class="author">By Narayana Panditacharya</p>
-        </div>
-        <nav class="nav-controls">
-            <div class="sarga-selector">
-                <label for="sarga">सर्गः (Canto):</label>
-                <select id="sarga">
-                    <option value="1">प्रथमः (1st Canto)</option>
-                    <option value="2">द्वितीयः (2nd Canto)</option>
-                    <option value="3">तृतीयः (3rd Canto)</option>
-                    <option value="4">चतुर्थः (4th Canto)</option>
-                    <option value="5">पञ्चमः (5th Canto)</option>
-                    <option value="6">षष्ठः (6th Canto)</option>
-                    <option value="7">सप्तमः (7th Canto)</option>
-                    <option value="8">अष्टमः (8th Canto)</option>
-                    <option value="9">नवमः (9th Canto)</option>
-                    <option value="10">दशमः (10th Canto)</option>
-                    <option value="11">एकादशः (11th Canto)</option>
-                    <option value="12">द्वादशः (12th Canto)</option>
-                    <option value="13">त्रयोदशः (13th Canto)</option>
-                    <option value="14">चतुर्दशः (14th Canto)</option>
-                    <option value="15">पञ्चदशः (15th Canto)</option>
-                    <option value="16">षोडशः (16th Canto)</option>
-                </select>
-            </div>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search slokas...">
-            </div>
-        </nav>
     </header>
+
+    <!-- Info Modal -->
+    <div class="info-modal" id="infoModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <h2>About Sumadhwa Vijaya</h2>
+            <p class="info-text">
+                <strong>Sumadhwa Vijaya</strong> is a Sanskrit biographical epic (mahakavya) composed by
+                <strong>Narayana Panditacharya</strong>, a contemporary disciple of Sri Madhvacharya.
+                Written in the 13th century CE, it chronicles the extraordinary life, teachings,
+                and miracles of the founder of Dvaita Vedanta philosophy.
+            </p>
+            <div class="philosophy-box">
+                <h3>Key Features</h3>
+                <ul>
+                    <li><strong>16 Cantos (Sargas):</strong> Comprehensive biography</li>
+                    <li><strong>Eyewitness Account:</strong> Written by a contemporary</li>
+                    <li><strong>Historical Value:</strong> Primary source on Madhva's life</li>
+                    <li><strong>Literary Excellence:</strong> Classical Sanskrit poetry</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
     <main>
         <div class="container">
-            <div class="info-panel">
-                <div class="panel-header">
-                    <h2>About Sumadhwa Vijaya</h2>
-                    <button class="panel-toggle-btn" id="panelToggleBtn" title="Hide panel">
-                        ◀
-                    </button>
-                </div>
-                <p class="info-text">
-                    <strong>Sumadhwa Vijaya</strong> is a Sanskrit biographical epic (mahakavya) composed by 
-                    <strong>Narayana Panditacharya</strong>, a contemporary disciple of Sri Madhvacharya. 
-                    Written in the 13th century CE, it chronicles the extraordinary life, teachings, 
-                    and miracles of the founder of Dvaita Vedanta philosophy.
-                </p>
-                <div class="philosophy-box">
-                    <h3>Key Features</h3>
-                    <ul>
-                        <li><strong>16 Cantos (Sargas):</strong> Comprehensive biography</li>
-                        <li><strong>Eyewitness Account:</strong> Written by a contemporary</li>
-                        <li><strong>Historical Value:</strong> Primary source on Madhva's life</li>
-                        <li><strong>Literary Excellence:</strong> Classical Sanskrit poetry</li>
-                    </ul>
-                </div>
-            </div>
-
             <div class="content-area">
                 <div class="section-heading" id="sectionHeading">
                     <span id="sectionTitle"></span>
                     <div class="heading-controls">
-                        <button class="heading-audio-btn" id="headingAudioBtn" title="Play all slokas">🔊 Play</button>
-                        <button class="heading-audio-btn" id="stopAudioBtn" title="Stop recitation" style="display: none;">⏹ Stop</button>
+                        <div class="language-selector-heading">
+                            <select id="language">
+                                <option value="sa">संस्कृतम्</option>
+                                <option value="en">English</option>
+                                <option value="kn">ಕನ್ನಡ</option>
+                                <option value="te">తెలుగు</option>
+                                <option value="ta">தமிழ்</option>
+                                <option value="ml">മലയാളം</option>
+                                <option value="bn">বাংলা</option>
+                                <option value="gu">ગુજરાતી</option>
+                                <option value="or">ଓଡ଼ିଆ</option>
+                            </select>
+                        </div>
+                        <div class="sarga-selector">
+                            <select id="sarga">
+                                <option value="1">प्रथमः (1st Canto)</option>
+                                <option value="2">द्वितीयः (2nd Canto)</option>
+                                <option value="3">तृतीयः (3rd Canto)</option>
+                                <option value="4">चतुर्थः (4th Canto)</option>
+                                <option value="5">पञ्चमः (5th Canto)</option>
+                                <option value="6">षष्ठः (6th Canto)</option>
+                                <option value="7">सप्तमः (7th Canto)</option>
+                                <option value="8">अष्टमः (8th Canto)</option>
+                                <option value="9">नवमः (9th Canto)</option>
+                                <option value="10">दशमः (10th Canto)</option>
+                                <option value="11">एकादशः (11th Canto)</option>
+                                <option value="12">द्वादशः (12th Canto)</option>
+                                <option value="13">त्रयोदशः (13th Canto)</option>
+                                <option value="14">चतुर्दशः (14th Canto)</option>
+                                <option value="15">पञ्चदशः (15th Canto)</option>
+                                <option value="16">षोडशः (16th Canto)</option>
+                            </select>
+                        </div>
+                        <button class="control-btn" id="decreaseFont" title="Decrease font size">A−</button>
+                        <button class="control-btn" id="increaseFont" title="Increase font size">A+</button>
+                        <button class="control-btn reset-btn" id="resetFont" title="Reset to default font size">A↺</button>
+                        <button class="heading-audio-btn" id="headingAudioBtn" title="Play all slokas">🔊</button>
+                        <button class="heading-audio-btn" id="stopAudioBtn" title="Stop recitation" style="display: none;">⏹</button>
                         <span class="collapse-icon" id="collapseIcon">▼</span>
                     </div>
                 </div>
