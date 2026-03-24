@@ -112,7 +112,7 @@ header.header-hidden {
 
 .header-toggle-btn {
     position: fixed;
-    top: 10px;
+    top: 60px;
     right: 10px;
     background: var(--primary-gold);
     color: white;
