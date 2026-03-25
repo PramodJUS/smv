@@ -2,9 +2,12 @@
 let allSlokas = [];
 let filteredSlokas = [];
 let granthaDetails = {};
+let granthaDetailsLoaded = false; // Track if grantha details are loaded
+let granthaDetailsLoading = false; // Track if currently loading
 let currentLanguage = 'sa';
 let currentView = 'list';
 let currentSloka = null; // Track current sloka being viewed
+let searchDebounceTimer = null; // Debounce timer for search
 
 // Readability settings - larger default for recitation
 let fontSize = 1.3; // rem
@@ -109,7 +112,6 @@ const detailContent = document.getElementById('detailContent');
 const backButton = document.getElementById('backButton');
 const sectionHeading = document.getElementById('sectionHeading');
 const sectionTitle = document.getElementById('sectionTitle');
-const collapseIcon = document.getElementById('collapseIcon');
 const container = document.querySelector('.container');
 
 // Initialize the application
@@ -132,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadSlokas();
-    loadGranthaDetails();
+    // loadGranthaDetails(); // Lazy load - only load when viewing detail
     setupEventListeners();
     setupReadabilityControls();
     loadReadabilitySettings();
@@ -140,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupKeyboardShortcuts();
     loadCommentarySettings();
     loadMeaningPreference();
+    preventCopying();
 });
 
 // Setup event listeners
@@ -153,12 +156,11 @@ function setupEventListeners() {
     }
 
     if (searchInput) {
-        searchInput.addEventListener('input', searchSlokas);
-    }
-
-
-    if (collapseIcon) {
-        collapseIcon.addEventListener('click', toggleSlokaList);
+        searchInput.addEventListener('input', () => {
+            // Debounce search to improve performance
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(searchSlokas, 300);
+        });
     }
 
     // Add heading audio button functionality
@@ -288,9 +290,11 @@ async function loadGranthaDetails() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         granthaDetails = await response.json();
+        granthaDetailsLoaded = true;
         console.log('Grantha details loaded:', Object.keys(granthaDetails).length, 'entries');
     } catch (error) {
         console.error('Error loading grantha details:', error);
+        granthaDetailsLoaded = false;
     }
 }
 
@@ -384,23 +388,26 @@ function searchSlokas() {
 // Display slokas
 function displaySlokas(slokas) {
     console.log('displaySlokas called with', slokas ? slokas.length : 0, 'slokas');
-    
+
     if (!slokas || slokas.length === 0) {
         const lang = languages[currentLanguage] || languages['sa'];
         slokaList.innerHTML = `<p class="no-results">${lang.noResults}</p>`;
         return;
     }
-    
+
     slokaList.innerHTML = '';
-    
+
+    // Use document fragment for better performance
+    const fragment = document.createDocumentFragment();
+
     slokas.forEach((sloka, index) => {
         console.log('Processing sloka', index + 1, ':', sloka.sloka_text.substring(0, 30) + '...');
-        
+
         const slokaCard = document.createElement('div');
         slokaCard.className = 'sloka-card';
         slokaCard.setAttribute('data-sarga', sloka.sarga);
         slokaCard.setAttribute('data-sloka', sloka.sloka_number);
-        
+
         let slokaText = sloka.sloka_text;
         try {
             if (currentLanguage !== 'sa') {
@@ -409,7 +416,7 @@ function displaySlokas(slokas) {
         } catch (e) {
             console.error('Transliteration error:', e);
         }
-        
+
         // Get meaning based on current language
         let meaning = '';
         if (currentLanguage === 'sa' || currentLanguage === 'en') {
@@ -433,18 +440,35 @@ function displaySlokas(slokas) {
         `;
 
         slokaCard.addEventListener('click', () => showSlokaDetail(sloka));
-        slokaList.appendChild(slokaCard);
+        fragment.appendChild(slokaCard);
     });
-    
+
+    // Append all cards at once for better performance
+    slokaList.appendChild(fragment);
+
     console.log('Display complete, cards added:', slokas.length);
 }
 
 // Show sloka detail
-function showSlokaDetail(sloka) {
+async function showSlokaDetail(sloka) {
     currentView = 'detail';
     currentSloka = sloka; // Store current sloka
     slokaList.style.display = 'none';
     slokaDetail.style.display = 'block';
+
+    // Disable sarga selector in detail view
+    if (sargaSelect) {
+        sargaSelect.disabled = true;
+    }
+
+    // Lazy load grantha details if not yet loaded
+    if (!granthaDetailsLoaded && !granthaDetailsLoading) {
+        granthaDetailsLoading = true;
+        // Show loading indicator
+        detailContent.innerHTML = '<div class="loading-indicator">Loading commentaries...</div>';
+        await loadGranthaDetails();
+        granthaDetailsLoading = false;
+    }
 
     let slokaText = sloka.sloka_text;
     if (currentLanguage !== 'sa') {
@@ -482,7 +506,16 @@ function showSlokaDetail(sloka) {
             // Find pratikas first (before any modification)
             if (pratikaIdentifier) {
                 const pratikas = pratikaIdentifier.findAllPratikas(commentaryText);
-                pratikaPositions = pratikas.map(p => ({
+
+                // Filter to only include pratikas followed by dandas
+                pratikaPositions = pratikas.filter(p => {
+                    // Check if there's a danda after this pratika word
+                    const afterPosition = p.position + p.word.length;
+                    const textAfter = commentaryText.slice(afterPosition);
+                    // Check if the next non-whitespace character is a danda
+                    const nextChar = textAfter.trimStart().charAt(0);
+                    return nextChar === '।' || nextChar === '॥';
+                }).map(p => ({
                     word: p.word,
                     position: p.position
                 }));
@@ -519,9 +552,8 @@ function showSlokaDetail(sloka) {
 
             commentariesHTML += `
                 <div class="detail-commentary ${alternateClass}">
-                    <div class="sloka-header commentary-header" data-target="${commentaryId}">
+                    <div class="sloka-header">
                         <h3>${devanagariName} (${englishName})</h3>
-                        <span class="collapse-arrow">▼</span>
                     </div>
                     <div class="commentary-text-wrapper" id="${commentaryId}">
                         <p class="commentary-text">${commentaryText.replace(/\n/g, '<br>')}</p>
@@ -574,6 +606,9 @@ function showSlokaDetail(sloka) {
                         </label>
                     </div>
                 </div>
+                <button class="nav-btn back-to-list-btn" id="backToListBtn" title="Back to list">
+                    ↩
+                </button>
                 <button class="nav-btn" id="prevSlokaBtn" title="Previous Sloka" ${!hasPrev ? 'disabled' : ''}>
                     ←
                 </button>
@@ -610,11 +645,44 @@ function showSlokaDetail(sloka) {
         });
     }
 
+    // Setup back to list button
+    const backToListBtn = document.getElementById('backToListBtn');
+    if (backToListBtn) {
+        backToListBtn.addEventListener('click', () => {
+            // Hide detail view and show list
+            slokaDetail.style.display = 'none';
+            slokaList.style.display = 'flex';
+            currentView = 'list';
+            currentSloka = null;
+
+            // Re-enable sarga selector in list view
+            if (sargaSelect) {
+                sargaSelect.disabled = false;
+            }
+
+            // Find and scroll to the current sloka card in the list
+            const slokaCards = document.querySelectorAll('.sloka-card');
+            const targetCard = Array.from(slokaCards).find(card => {
+                const cardSarga = card.dataset.sarga;
+                const cardNumber = card.dataset.number;
+                return cardSarga === sloka.sarga && cardNumber === sloka.sloka_number;
+            });
+
+            if (targetCard) {
+                // Scroll to the card
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Highlight the card briefly
+                targetCard.classList.add('highlight-sloka');
+                setTimeout(() => {
+                    targetCard.classList.remove('highlight-sloka');
+                }, 2000);
+            }
+        });
+    }
+
     // Setup commentary dropdown for detail view
     setupDetailCommentaryDropdown();
-
-    // Setup collapsible commentaries
-    setupCollapsibleCommentaries();
 }
 
 // Text-to-speech function with MP3 support
@@ -705,25 +773,25 @@ function updateSectionTitle() {
     sectionTitle.textContent = displayText;
 }
 
-// Toggle sloka list
-function toggleSlokaList() {
-    const isCollapsed = slokaList.style.display === 'none';
-    slokaList.style.display = isCollapsed ? 'block' : 'none';
-    collapseIcon.textContent = isCollapsed ? '▼' : '▲';
-}
-
 // Play all slokas sequentially
 let isPlayingAll = false;
 
 function playAllSlokas() {
+    // If in detail view, play only current sloka
+    if (currentView === 'detail' && currentSloka) {
+        playSingleSloka(currentSloka);
+        return;
+    }
+
+    // In list view, play all slokas
     if (!filteredSlokas || filteredSlokas.length === 0) {
         alert('No slokas to play');
         return;
     }
-    
+
     const confirmPlay = confirm(`Play all ${filteredSlokas.length} slokas?\nThis may take several minutes.`);
     if (!confirmPlay) return;
-    
+
     isPlayingAll = true;
     let currentIndex = 0;
     
@@ -816,6 +884,66 @@ function playAllSlokas() {
     playNext();
 }
 
+// Play single sloka (for detail view)
+function playSingleSloka(sloka) {
+    if (!sloka) {
+        alert('No sloka to play');
+        return;
+    }
+
+    isPlayingAll = true;
+
+    // Show stop button, hide play button
+    const playBtn = document.getElementById('headingAudioBtn');
+    const stopBtn = document.getElementById('stopAudioBtn');
+    if (playBtn) playBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'inline-block';
+
+    console.log(`Playing sloka ${sloka.sarga}.${sloka.sloka_number}`);
+
+    // Try MP3 first
+    const audioPath = `audio/${sloka.sarga}-${sloka.sloka_number}.mp3`;
+    const audio = new Audio(audioPath);
+
+    audio.onloadeddata = () => {
+        console.log('Playing MP3:', audioPath);
+        audio.play().then(() => {
+            audio.onended = () => {
+                console.log('Finished playing sloka');
+                stopRecitation();
+            };
+        }).catch(err => {
+            console.error('MP3 playback error:', err);
+            useSpeechSynthesisForSingle(sloka);
+        });
+    };
+
+    audio.onerror = () => {
+        console.log('MP3 not found, using TTS');
+        useSpeechSynthesisForSingle(sloka);
+    };
+
+    function useSpeechSynthesisForSingle(sloka) {
+        const utterance = new SpeechSynthesisUtterance(sloka.sloka_text);
+        utterance.lang = 'hi-IN';
+        utterance.rate = 0.8;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        utterance.onend = () => {
+            console.log('Finished playing sloka');
+            stopRecitation();
+        };
+
+        utterance.onerror = (event) => {
+            console.error('Error playing sloka:', event.error);
+            stopRecitation();
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
 // Stop recitation
 function stopRecitation() {
     isPlayingAll = false;
@@ -851,29 +979,6 @@ function toggleInfoPanel() {
     }
 }
 
-// Setup collapsible commentaries
-function setupCollapsibleCommentaries() {
-    // Add click handlers to each commentary header
-    const commentaryHeaders = document.querySelectorAll('.commentary-header');
-    commentaryHeaders.forEach(header => {
-        header.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const wrapper = document.getElementById(targetId);
-            const arrow = this.querySelector('.collapse-arrow');
-
-            if (wrapper) {
-                wrapper.classList.toggle('collapsed');
-                if (arrow) {
-                    arrow.classList.toggle('rotated');
-                }
-            }
-        });
-
-        // Make header cursor pointer
-        header.style.cursor = 'pointer';
-    });
-}
-
 // Go to home (list view)
 function goToHome() {
     if (currentView === 'detail') {
@@ -881,6 +986,11 @@ function goToHome() {
         slokaList.style.display = 'block';
         currentView = 'list';
         currentSloka = null;
+
+        // Re-enable sarga selector in list view
+        if (sargaSelect) {
+            sargaSelect.disabled = false;
+        }
 
         // Scroll to top smoothly
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -903,6 +1013,9 @@ function loadCommentarySettings() {
 function saveCommentarySettings() {
     localStorage.setItem('smvCommentaries', JSON.stringify(visibleCommentaries));
 }
+
+// Global close handler reference to prevent multiple listeners
+let commentaryCloseHandler = null;
 
 // Setup commentary dropdown in header
 function setupDetailCommentaryDropdown() {
@@ -932,25 +1045,26 @@ function setupDetailCommentaryDropdown() {
 
         updateSelectAllCheckbox();
 
-        // Toggle dropdown
+        // Toggle dropdown on button click
         dropdownBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             dropdownContent.classList.toggle('show');
         });
 
-        // Close dropdown when clicking outside and refresh view
-        let closeHandler = (e) => {
+        // Remove old close handler if exists
+        if (commentaryCloseHandler) {
+            document.removeEventListener('click', commentaryCloseHandler);
+        }
+
+        // Create new close handler
+        commentaryCloseHandler = (e) => {
             if (!e.target.closest('.detail-commentary-selector')) {
                 dropdownContent.classList.remove('show');
-
-                // Refresh detail view after dropdown closes
-                if (currentSloka) {
-                    showSlokaDetail(currentSloka);
-                }
             }
         };
 
-        document.addEventListener('click', closeHandler);
+        // Add close handler
+        document.addEventListener('click', commentaryCloseHandler);
 
         // Prevent dropdown from closing when clicking inside
         dropdownContent.addEventListener('click', (e) => {
@@ -966,6 +1080,15 @@ function setupDetailCommentaryDropdown() {
                     visibleCommentaries[commentaryName] = e.target.checked;
                     saveCommentarySettings();
                     updateSelectAllCheckbox();
+
+                    // Toggle visibility of the corresponding commentary
+                    const commentaryElements = document.querySelectorAll('.detail-commentary');
+                    commentaryElements.forEach(element => {
+                        const header = element.querySelector('.sloka-header h3');
+                        if (header && header.textContent.includes(commentaryName)) {
+                            element.style.display = e.target.checked ? 'block' : 'none';
+                        }
+                    });
                 }
             });
         });
@@ -985,6 +1108,12 @@ function setupDetailCommentaryDropdown() {
                 });
 
                 saveCommentarySettings();
+
+                // Toggle visibility of all commentaries
+                const commentaryElements = document.querySelectorAll('.detail-commentary');
+                commentaryElements.forEach(element => {
+                    element.style.display = newState ? 'block' : 'none';
+                });
             });
         }
     }
@@ -1171,4 +1300,34 @@ function loadMeaningPreference() {
             meaningToggleBtn.classList.add('active');
         }
     }
+}
+
+// Prevent copying while allowing selection
+function preventCopying() {
+    // Prevent copy event
+    document.addEventListener('copy', (e) => {
+        e.preventDefault();
+        return false;
+    });
+
+    // Prevent cut event
+    document.addEventListener('cut', (e) => {
+        e.preventDefault();
+        return false;
+    });
+
+    // Prevent right-click context menu
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        return false;
+    });
+
+    // Prevent keyboard shortcuts for copying
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+C, Ctrl+X, Ctrl+A (select all), Ctrl+U (view source)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'u')) {
+            e.preventDefault();
+            return false;
+        }
+    });
 }

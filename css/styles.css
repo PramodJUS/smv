@@ -65,6 +65,10 @@ body {
     line-height: 1.8;
     min-height: 100vh;
     font-weight: 400;
+    user-select: text; /* Allow text selection */
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
 }
 
 /* Decorative background pattern */
@@ -108,6 +112,10 @@ body:has(header:not(.header-hidden)) {
 header.header-hidden {
     transform: translateY(-100%);
     box-shadow: none;
+}
+
+header.header-hidden .madhwa-icon {
+    transform: translateY(-280px);
 }
 
 .header-toggle-btn {
@@ -567,6 +575,12 @@ header::after {
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
 }
 
+.heading-controls .sarga-selector select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #E0E0E0;
+}
+
 .sarga-selector select:focus,
 #searchInput:focus {
     outline: none;
@@ -811,16 +825,6 @@ header.header-hidden ~ main {
     transform: scale(1.05);
 }
 
-.collapse-icon {
-    cursor: pointer;
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
-}
-
-.collapse-icon:hover {
-    transform: scale(1.2);
-}
-
 /* Sloka Cards */
 .sloka-list {
     display: flex;
@@ -936,6 +940,23 @@ body.show-meanings .sloka-meaning {
     font-size: 1.5rem;
     color: var(--accent-saffron);
     animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Highlight sloka when returning from detail view */
+.sloka-card.highlight-sloka {
+    animation: highlightPulse 2s ease-in-out;
+    border-color: var(--accent-saffron);
+}
+
+@keyframes highlightPulse {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(212, 160, 86, 0.08);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 8px 30px rgba(255, 153, 51, 0.4);
+        transform: scale(1.02);
+    }
 }
 
 @keyframes pulse {
@@ -1161,6 +1182,12 @@ body.show-meanings .sloka-meaning {
     font-weight: bold;
 }
 
+.back-to-list-btn {
+    background: linear-gradient(135deg, var(--primary-gold), var(--gold-dark));
+    color: white;
+    border: none;
+}
+
 .nav-btn:hover:not(:disabled) {
     background: var(--primary-gold);
     color: white;
@@ -1219,13 +1246,9 @@ body.show-meanings .sloka-meaning {
 }
 
 .detail-commentary.commentary-odd {
-    background: linear-gradient(135deg, var(--bg-white), var(--gold-lighter));
+    background: linear-gradient(135deg, var(--gold-lighter), var(--gold-light));
 }
 
-/* Collapsed commentary - reduce padding */
-.detail-commentary:has(.commentary-text-wrapper.collapsed) {
-    padding-bottom: 0.8rem;
-}
 
 .sloka-header {
     display: flex;
@@ -1240,6 +1263,7 @@ body.show-meanings .sloka-meaning {
     color: var(--text-dark);
     font-size: 1.3rem;
     font-weight: 400;
+    font-style: italic;
 }
 
 .detail-sloka .sloka-text-detail {
@@ -1247,54 +1271,17 @@ body.show-meanings .sloka-meaning {
     padding: 0;
 }
 
-/* Collapsible commentary header */
+/* Commentary header */
 .commentary-header {
-    cursor: pointer;
-    transition: all 0.3s ease;
     margin-bottom: 0;
     padding: 1rem;
     border-radius: 10px;
-    user-select: none;
 }
 
-.commentary-header:hover {
-    background: rgba(212, 160, 86, 0.1);
-}
 
-.commentary-header:hover .collapse-arrow {
-    transform: scale(1.15);
-    color: var(--gold-dark);
-}
-
-.collapse-arrow {
-    font-size: 1.8rem;
-    color: var(--primary-gold);
-    transition: transform 0.3s ease, color 0.3s ease;
-    display: inline-block;
-    line-height: 1;
-}
-
-.collapse-arrow.rotated {
-    transform: rotate(-90deg);
-}
-
-.commentary-header:hover .collapse-arrow.rotated {
-    transform: rotate(-90deg) scale(1.15);
-}
-
-/* Commentary text wrapper for collapse animation */
+/* Commentary text wrapper */
 .commentary-text-wrapper {
-    max-height: 5000px;
-    overflow: hidden;
-    transition: max-height 0.5s ease, opacity 0.3s ease, margin-top 0.3s ease;
-    opacity: 1;
     margin-top: 1.5rem;
-}
-
-.commentary-text-wrapper.collapsed {
-    max-height: 0;
-    opacity: 0;
-    margin-top: 0;
 }
 
 .speaker-btn {
@@ -1319,11 +1306,18 @@ body.show-meanings .sloka-meaning {
 .commentary-text {
     font-size: var(--base-font-size);
     line-height: var(--line-height);
-    color: var(--text-dark);
     font-weight: 400;
     max-width: 100%;
     transition: max-width 0.3s ease;
     margin: 0;
+}
+
+.sloka-text-detail {
+    color: #3D2817;
+}
+
+.commentary-text {
+    color: #000000;
 }
 
 
@@ -1388,6 +1382,28 @@ footer p {
     background: var(--gold-lighter);
     border-radius: 15px;
     border: 2px dashed var(--border-light);
+}
+
+.loading-indicator {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-medium);
+    font-size: 1.1rem;
+    background: var(--gold-lighter);
+    border-radius: 15px;
+    border: 2px solid var(--primary-gold);
+    animation: pulse-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-loading {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(0.98);
+    }
 }
 
 /* Responsive Design */
