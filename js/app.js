@@ -1249,7 +1249,7 @@ function loadReadabilitySettings() {
 }
 
 function applyTheme(theme) {
-    document.body.classList.remove('light-theme', 'sepia-theme', 'dark-theme');
+    document.body.classList.remove('light-theme', 'sepia-theme', 'dark-theme', 'black-gold-theme');
     document.body.classList.add(theme + '-theme');
     localStorage.setItem('smvTheme', theme);
 }

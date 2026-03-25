@@ -51,6 +51,147 @@ body.dark-theme .detail-header {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Black Gold theme */
+body.black-gold-theme {
+    --bg-cream: #000000;
+    --bg-white: #0A0A0A;
+    --bg-light: #1A1A1A;
+    --text-dark: #FFFFFF;
+    --text-medium: #F0F0F0;
+    --text-light: #C9A961;
+    --border-light: #C9A961;
+    --primary-gold: #C9A961;
+    --gold-light: #D4A056;
+    --gold-lighter: #1A1A1A;
+    --gold-dark: #B8860B;
+    --accent-saffron: #D4A056;
+    --accent-red: #C9A961;
+}
+
+body.black-gold-theme {
+    background: linear-gradient(135deg, #000000 0%, #1A1A1A 100%);
+}
+
+body.black-gold-theme::before {
+    background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 100px, rgba(201, 169, 97, 0.05) 100px, rgba(201, 169, 97, 0.05) 200px),
+        repeating-linear-gradient(-45deg, transparent, transparent 100px, rgba(212, 160, 86, 0.05) 100px, rgba(212, 160, 86, 0.05) 200px);
+}
+
+body.black-gold-theme header {
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.98) 0%, rgba(0, 0, 0, 0.98) 100%);
+    border-bottom: 2px solid var(--primary-gold);
+}
+
+body.black-gold-theme .detail-header {
+    background: transparent;
+}
+
+body.black-gold-theme .sloka-card {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+    border: 1px solid var(--primary-gold);
+}
+
+body.black-gold-theme .sloka-card:hover {
+    background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
+    border-color: var(--primary-gold);
+    box-shadow: 0 8px 30px rgba(201, 169, 97, 0.4);
+}
+
+body.black-gold-theme .detail-commentary.commentary-even {
+    background: #0A0A0A;
+    border: 1px solid rgba(212, 160, 86, 0.3);
+}
+
+body.black-gold-theme .detail-commentary.commentary-odd {
+    background: linear-gradient(135deg, #0A0A0A, #1A1A1A);
+    border: 1px solid rgba(201, 169, 97, 0.3);
+}
+
+body.black-gold-theme .commentary-text strong {
+    background: linear-gradient(120deg, rgba(201, 169, 97, 0.3) 0%, rgba(212, 160, 86, 0.25) 100%);
+    color: var(--primary-gold);
+    border-bottom-color: var(--primary-gold);
+}
+
+body.black-gold-theme footer {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%);
+    border-top: 2px solid var(--primary-gold);
+}
+
+body.black-gold-theme .sloka-text-detail {
+    color: #C9A961;
+}
+
+body.black-gold-theme .commentary-text {
+    color: #C9A961;
+}
+
+body.black-gold-theme .sloka-text {
+    color: #C9A961;
+}
+
+body.black-gold-theme .heading-controls .sarga-selector select {
+    background: #1A1A1A;
+    color: #C9A961;
+    border-color: #C9A961;
+}
+
+body.black-gold-theme .heading-controls .language-selector-heading select {
+    background: #1A1A1A;
+    color: #C9A961;
+    border-color: #C9A961;
+}
+
+body.black-gold-theme .heading-controls .sarga-selector select:hover,
+body.black-gold-theme .heading-controls .language-selector-heading select:hover {
+    background: #2A2A2A;
+    border-color: #D4A056;
+}
+
+body.black-gold-theme .section-heading {
+    background:
+        linear-gradient(135deg,
+            #B8860B 0%,
+            #D4A056 25%,
+            #FFD700 50%,
+            #D4A056 75%,
+            #B8860B 100%
+        );
+    box-shadow:
+        0 4px 20px rgba(212, 160, 86, 0.6),
+        0 8px 40px rgba(255, 215, 0, 0.4),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    position: relative;
+}
+
+body.black-gold-theme .section-heading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.3) 0%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.2) 100%
+    );
+    border-radius: 15px;
+    pointer-events: none;
+}
+
+body.black-gold-theme .section-heading:hover {
+    box-shadow:
+        0 6px 25px rgba(212, 160, 86, 0.8),
+        0 10px 50px rgba(255, 215, 0, 0.6),
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+}
+
 * {
     margin: 0;
     padding: 0;
