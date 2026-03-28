@@ -819,6 +819,7 @@ function updateSectionTitle() {
 
 // Play all slokas sequentially
 let isPlayingAll = false;
+let currentAudio = null; // Store current audio element for stopping
 
 function playAllSlokas() {
     // If in detail view, play only current sloka
@@ -877,12 +878,12 @@ function playAllSlokas() {
         
         // Try MP3 first
         const audioPath = `audio/${sloka.sarga}-${sloka.sloka_number}.mp3`;
-        const audio = new Audio(audioPath);
-        
-        audio.onloadeddata = () => {
+        currentAudio = new Audio(audioPath);
+
+        currentAudio.onloadeddata = () => {
             console.log('Playing MP3:', audioPath);
-            audio.play().then(() => {
-                audio.onended = () => {
+            currentAudio.play().then(() => {
+                currentAudio.onended = () => {
                     currentIndex++;
                     if (isPlayingAll) {
                         setTimeout(playNext, 500);
@@ -890,12 +891,14 @@ function playAllSlokas() {
                 };
             }).catch(err => {
                 console.error('MP3 playback error:', err);
+                currentAudio = null;
                 useSpeechSynthesisForPlayAll(sloka);
             });
         };
-        
-        audio.onerror = () => {
+
+        currentAudio.onerror = () => {
             console.log('MP3 not found, using TTS');
+            currentAudio = null;
             useSpeechSynthesisForPlayAll(sloka);
         };
     }
@@ -947,23 +950,25 @@ function playSingleSloka(sloka) {
 
     // Try MP3 first
     const audioPath = `audio/${sloka.sarga}-${sloka.sloka_number}.mp3`;
-    const audio = new Audio(audioPath);
+    currentAudio = new Audio(audioPath);
 
-    audio.onloadeddata = () => {
+    currentAudio.onloadeddata = () => {
         console.log('Playing MP3:', audioPath);
-        audio.play().then(() => {
-            audio.onended = () => {
+        currentAudio.play().then(() => {
+            currentAudio.onended = () => {
                 console.log('Finished playing sloka');
                 stopRecitation();
             };
         }).catch(err => {
             console.error('MP3 playback error:', err);
+            currentAudio = null;
             useSpeechSynthesisForSingle(sloka);
         });
     };
 
-    audio.onerror = () => {
+    currentAudio.onerror = () => {
         console.log('MP3 not found, using TTS');
+        currentAudio = null;
         useSpeechSynthesisForSingle(sloka);
     };
 
@@ -992,6 +997,13 @@ function playSingleSloka(sloka) {
 function stopRecitation() {
     isPlayingAll = false;
     window.speechSynthesis.cancel();
+
+    // Stop and clear current audio if it exists
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
 
     // Remove highlight from all slokas
     document.querySelectorAll('.sloka-card.playing').forEach(card => {
