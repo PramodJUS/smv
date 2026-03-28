@@ -1,0 +1,18 @@
+# Prevent directory listing
+Options -Indexes
+
+# Block direct access to CSV and text files
+<FilesMatch "\.(csv|txt)$">
+    # Allow access only from same domain
+    SetEnvIf Referer "^https?://localhost" allow_access
+    SetEnvIf Referer "^https?://127.0.0.1" allow_access
+    SetEnvIf Referer "^https?://[^/]*\.github\.io" allow_access
+    SetEnvIf Referer "^https?://pramodjus\.github\.io" allow_access
+
+    Order Deny,Allow
+    Deny from all
+    Allow from env=allow_access
+</FilesMatch>
+
+# Custom error page
+ErrorDocument 403 "Access Forbidden"
