@@ -98,6 +98,7 @@ body.black-gold-theme .sloka-card:hover {
     box-shadow: 0 8px 30px rgba(201, 169, 97, 0.4);
 }
 
+
 body.black-gold-theme .detail-commentary.commentary-even {
     background: #0A0A0A;
     border: 1px solid rgba(212, 160, 86, 0.3);
@@ -1073,6 +1074,27 @@ body.show-meanings .sloka-meaning {
     color: var(--text-dark);
 }
 
+/* Next Sarga Link */
+.next-sarga-link {
+    text-align: center;
+    padding: 2rem 1rem;
+    margin-top: 2rem;
+    font-size: 1.1rem;
+    color: var(--primary-gold);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.next-sarga-link:hover {
+    color: var(--accent-saffron);
+    transform: translateX(5px);
+}
+
+.next-sarga-link .next-sarga-name {
+    font-weight: 600;
+    text-decoration: underline;
+}
+
 .sloka-card.playing::before {
     content: "▶";
     position: absolute;
@@ -1673,6 +1695,11 @@ footer p {
         font-size: 1.2rem;
         left: 0.2rem;
         top: 0.8rem;
+    }
+
+    .next-sarga-link {
+        font-size: 1rem;
+        padding: 1.5rem 1rem;
     }
 }
 

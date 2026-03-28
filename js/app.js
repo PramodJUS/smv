@@ -34,7 +34,8 @@ const languages = {
         backToList: '← Back to List',
         loading: 'Loading slokas...',
         noResults: 'No slokas found.',
-        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes'
+        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes',
+        nextCanto: 'अग्रिमः सर्गः'
     },
     kn: {
         title: 'ಸುಮಧ್ವವಿಜಯ - ಶ್ರೀ ಮಧ್ವಾಚಾರ್ಯರ ಜೀವನ',
@@ -42,7 +43,8 @@ const languages = {
         backToList: '← ಪಟ್ಟಿಗೆ ಹಿಂತಿರುಗಿ',
         loading: 'ಶ್ಲೋಕಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...',
         noResults: 'ಶ್ಲೋಕಗಳು ಕಂಡುಬಂದಿಲ್ಲ.',
-        footer: 'ನಾರಾಯಣ ಪಂಡಿತಾಚಾರ್ಯರ ಸುಮಧ್ವವಿಜಯ | ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಭಕ್ತಿ ಉದ್ದೇಶಗಳಿಗಾಗಿ'
+        footer: 'ನಾರಾಯಣ ಪಂಡಿತಾಚಾರ್ಯರ ಸುಮಧ್ವವಿಜಯ | ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಭಕ್ತಿ ಉದ್ದೇಶಗಳಿಗಾಗಿ',
+        nextCanto: 'ಮುಂದಿನ ಸರ್ಗ'
     },
     te: {
         title: 'సుమధ్వవిజయ - శ్రీ మధ్వాచార్యుల జీవితం',
@@ -50,7 +52,8 @@ const languages = {
         backToList: '← జాబితాకు తిరిగి వెళ్ళండి',
         loading: 'శ్లోకాలు లోడ్ అవుతున్నాయి...',
         noResults: 'శ్లోకాలు కనుగొనబడలేదు.',
-        footer: 'నారాయణ పండితాచార్యుల సుమధ్వవిజయ | విద్యా మరియు భక్తి ప్రయోజనాల కోసం'
+        footer: 'నారాయణ పండితాచార్యుల సుమధ్వవిజయ | విద్యా మరియు భక్తి ప్రయోజనాల కోసం',
+        nextCanto: 'తదుపరి సర్గము'
     },
     en: {
         title: 'Sumadhwa Vijaya - The Life of Sri Madhvacharya',
@@ -58,7 +61,8 @@ const languages = {
         backToList: '← Back to List',
         loading: 'Loading slokas...',
         noResults: 'No slokas found.',
-        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes'
+        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes',
+        nextCanto: 'Next Canto'
     },
     ta: {
         title: 'Sumadhwa Vijaya - The Life of Sri Madhvacharya',
@@ -66,7 +70,8 @@ const languages = {
         backToList: '← Back to List',
         loading: 'Loading slokas...',
         noResults: 'No slokas found.',
-        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes'
+        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes',
+        nextCanto: 'Next Canto'
     },
     ml: {
         title: 'Sumadhwa Vijaya - The Life of Sri Madhvacharya',
@@ -74,7 +79,8 @@ const languages = {
         backToList: '← Back to List',
         loading: 'Loading slokas...',
         noResults: 'No slokas found.',
-        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes'
+        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes',
+        nextCanto: 'Next Canto'
     },
     bn: {
         title: 'Sumadhwa Vijaya - The Life of Sri Madhvacharya',
@@ -82,7 +88,8 @@ const languages = {
         backToList: '← Back to List',
         loading: 'Loading slokas...',
         noResults: 'No slokas found.',
-        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes'
+        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes',
+        nextCanto: 'Next Canto'
     },
     gu: {
         title: 'Sumadhwa Vijaya - The Life of Sri Madhvacharya',
@@ -90,7 +97,8 @@ const languages = {
         backToList: '← Back to List',
         loading: 'Loading slokas...',
         noResults: 'No slokas found.',
-        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes'
+        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes',
+        nextCanto: 'Next Canto'
     },
     or: {
         title: 'Sumadhwa Vijaya - The Life of Sri Madhvacharya',
@@ -98,7 +106,8 @@ const languages = {
         backToList: '← Back to List',
         loading: 'Loading slokas...',
         noResults: 'No slokas found.',
-        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes'
+        footer: 'Sumadhwa Vijaya by Narayana Panditacharya | For educational and devotional purposes',
+        nextCanto: 'Next Canto'
     }
 };
 
@@ -445,6 +454,41 @@ function displaySlokas(slokas) {
 
     // Append all cards at once for better performance
     slokaList.appendChild(fragment);
+
+    // Add "Next Sarga" link if viewing a specific sarga and not the last one
+    const currentSarga = parseInt(sargaSelect.value);
+    const searchTerm = searchInput ? searchInput.value.trim() : '';
+
+    // Only show if not searching and not viewing the last sarga
+    if (!searchTerm && currentSarga < 16) {
+        const nextSargaLink = document.createElement('div');
+        nextSargaLink.className = 'next-sarga-link';
+
+        // Get next sarga name from the select options
+        const nextSargaOption = sargaSelect.querySelector(`option[value="${currentSarga + 1}"]`);
+        let nextSargaName = nextSargaOption ? nextSargaOption.textContent : `Sarga ${currentSarga + 1}`;
+
+        // Transliterate the sarga name if needed
+        if (currentLanguage !== 'sa' && nextSargaName) {
+            const sanText = nextSargaName.split('(')[0].trim();
+            nextSargaName = transliterateText(sanText, currentLanguage);
+        }
+
+        // Get language-specific label
+        const lang = languages[currentLanguage] || languages['sa'];
+        const nextCantoLabel = lang.nextCanto || 'Next Canto';
+
+        nextSargaLink.innerHTML = `${nextCantoLabel}: <span class="next-sarga-name">${nextSargaName}</span> →`;
+
+        nextSargaLink.addEventListener('click', () => {
+            sargaSelect.value = currentSarga + 1;
+            filterSlokas();
+            // Scroll to top smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        slokaList.appendChild(nextSargaLink);
+    }
 
     console.log('Display complete, cards added:', slokas.length);
 }
