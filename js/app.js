@@ -570,6 +570,9 @@ async function showSlokaDetail(sloka) {
     slokaList.style.display = 'none';
     slokaDetail.style.display = 'block';
 
+    // Scroll to top of page
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
     // Disable sarga selector in detail view
     if (sargaSelect) {
         sargaSelect.disabled = true;
@@ -735,9 +738,23 @@ async function showSlokaDetail(sloka) {
         </div>
         <div class="detail-sloka">
             <p class="sloka-text-detail">${slokaText.replace(/\n/g, '<br>')}</p>
+            <button class="detail-speak-btn" id="detailSpeakBtn" title="Recite this sloka">▶</button>
         </div>
         ${commentariesHTML || '<div class="detail-meaning"><p>Commentaries to be added</p></div>'}
     `;
+
+    // Setup play button for detail view
+    const detailSpeakBtn = document.getElementById('detailSpeakBtn');
+    if (detailSpeakBtn) {
+        detailSpeakBtn.addEventListener('click', () => {
+            if (detailSpeakBtn.textContent === '⏹') {
+                stopRecitation();
+            } else {
+                stopRecitation();
+                playSingleSlokaFromDetail(sloka, detailSpeakBtn);
+            }
+        });
+    }
 
     // Setup navigation buttons
     const prevBtn = document.getElementById('prevSlokaBtn');
@@ -769,7 +786,6 @@ async function showSlokaDetail(sloka) {
             slokaDetail.style.display = 'none';
             slokaList.style.display = 'flex';
             currentView = 'list';
-            currentSloka = null;
 
             // Re-enable sarga selector in list view
             if (sargaSelect) {
@@ -777,23 +793,24 @@ async function showSlokaDetail(sloka) {
             }
 
             // Find and scroll to the current sloka card in the list
-            const slokaCards = document.querySelectorAll('.sloka-card');
-            const targetCard = Array.from(slokaCards).find(card => {
-                const cardSarga = card.dataset.sarga;
-                const cardNumber = card.dataset.number;
-                return cardSarga === sloka.sarga && cardNumber === sloka.sloka_number;
-            });
+            const targetCard = document.querySelector(
+                `.sloka-card[data-sarga="${sloka.sarga}"][data-sloka="${sloka.sloka_number}"]`
+            );
 
             if (targetCard) {
-                // Scroll to the card
-                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                // Highlight the card briefly
-                targetCard.classList.add('highlight-sloka');
+                // Scroll to the card after a short delay to ensure list is visible
                 setTimeout(() => {
-                    targetCard.classList.remove('highlight-sloka');
-                }, 2000);
+                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    // Highlight the card briefly
+                    targetCard.classList.add('highlight-sloka');
+                    setTimeout(() => {
+                        targetCard.classList.remove('highlight-sloka');
+                    }, 2000);
+                }, 100);
             }
+
+            currentSloka = null;
         });
     }
 
@@ -1109,6 +1126,97 @@ function useSpeechSynthesisForSingleFromList(sloka, slokaCard) {
     window.speechSynthesis.speak(utterance);
 }
 
+// Play single sloka from detail view (with button state)
+function playSingleSlokaFromDetail(sloka, speakBtn) {
+    if (!sloka) return;
+
+    currentlyPlayingSloka = { sarga: sloka.sarga, sloka_number: sloka.sloka_number };
+
+    // Change button to stop
+    if (speakBtn) {
+        speakBtn.textContent = '⏹';
+        speakBtn.title = 'Stop recitation';
+    }
+
+    isPlayingAll = true;
+
+    // Show stop button, hide play button in header
+    const playBtn = document.getElementById('headingAudioBtn');
+    const stopBtn = document.getElementById('stopAudioBtn');
+    if (playBtn) playBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'inline-block';
+
+    console.log(`Playing sloka ${sloka.sarga}.${sloka.sloka_number} from detail view`);
+
+    // Try MP3 first
+    const audioPath = `audio/${sloka.sarga}-${sloka.sloka_number}.mp3`;
+    currentAudio = new Audio(audioPath);
+
+    currentAudio.onloadeddata = () => {
+        console.log('Playing MP3:', audioPath);
+        currentAudio.play().then(() => {
+            currentAudio.onended = () => {
+                console.log('Finished playing sloka');
+                if (speakBtn) {
+                    speakBtn.textContent = '▶';
+                    speakBtn.title = 'Recite this sloka';
+                }
+                stopRecitation();
+            };
+        }).catch(err => {
+            console.error('MP3 playback error:', err);
+            currentAudio = null;
+            useSpeechSynthesisForDetail(sloka, speakBtn);
+        });
+    };
+
+    currentAudio.onerror = () => {
+        console.log('MP3 not found, using TTS');
+        currentAudio = null;
+        useSpeechSynthesisForDetail(sloka, speakBtn);
+    };
+
+    currentAudio.load();
+}
+
+// Use TTS for single sloka from detail view
+function useSpeechSynthesisForDetail(sloka, speakBtn) {
+    if (!('speechSynthesis' in window)) {
+        alert('Speech synthesis not supported');
+        if (speakBtn) {
+            speakBtn.textContent = '▶';
+            speakBtn.title = 'Recite this sloka';
+        }
+        stopRecitation();
+        return;
+    }
+
+    const text = sloka.sloka_text.replace(/<BR>/gi, ' ').replace(/[॥।]/g, '');
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'hi-IN';
+    utterance.rate = 0.8;
+
+    utterance.onend = () => {
+        console.log('TTS finished');
+        if (speakBtn) {
+            speakBtn.textContent = '▶';
+            speakBtn.title = 'Recite this sloka';
+        }
+        stopRecitation();
+    };
+
+    utterance.onerror = () => {
+        console.error('TTS error');
+        if (speakBtn) {
+            speakBtn.textContent = '▶';
+            speakBtn.title = 'Recite this sloka';
+        }
+        stopRecitation();
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
 // Play single sloka (for detail view)
 function playSingleSloka(sloka) {
     if (!sloka) {
@@ -1195,6 +1303,13 @@ function stopRecitation() {
         btn.title = 'Recite this sloka';
     });
 
+    // Reset detail speak button if it exists
+    const detailSpeakBtn = document.getElementById('detailSpeakBtn');
+    if (detailSpeakBtn) {
+        detailSpeakBtn.textContent = '▶';
+        detailSpeakBtn.title = 'Recite this sloka';
+    }
+
     // Show play button, hide stop button
     const playBtn = document.getElementById('headingAudioBtn');
     const stopBtn = document.getElementById('stopAudioBtn');
@@ -1220,22 +1335,32 @@ function toggleInfoPanel() {
     }
 }
 
-// Go to home (list view)
+// Go to home (list view with sarga 1)
 function goToHome() {
+    // Hide detail view if open
     if (currentView === 'detail') {
         slokaDetail.style.display = 'none';
         slokaList.style.display = 'flex';
         currentView = 'list';
         currentSloka = null;
-
-        // Re-enable sarga selector in list view
-        if (sargaSelect) {
-            sargaSelect.disabled = false;
-        }
-
-        // Scroll to top smoothly
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    // Re-enable sarga selector
+    if (sargaSelect) {
+        sargaSelect.disabled = false;
+        sargaSelect.value = '1'; // Set to sarga 1
+    }
+
+    // Clear search
+    if (searchInput) {
+        searchInput.value = '';
+    }
+
+    // Filter to show sarga 1
+    filterSlokas();
+
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Load commentary visibility settings
