@@ -738,6 +738,14 @@ header::after {
     color: var(--text-light);
 }
 
+/* Search term highlighting */
+.search-highlight {
+    background-color: #CC5500;
+    color: white;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
 /* Main Container */
 main {
     padding: 2rem 1rem;
@@ -950,21 +958,28 @@ header.header-hidden ~ main {
 }
 
 .heading-audio-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: transparent;
+    border: 3px solid rgba(255, 255, 255, 0.8);
     color: white;
-    padding: 0.6rem 1.2rem;
-    border-radius: 25px;
+    padding: 0;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .heading-audio-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
     border-color: white;
-    transform: scale(1.05);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
 }
 
 /* Sloka Cards */
@@ -1042,6 +1057,7 @@ header.header-hidden ~ main {
     font-weight: 400;
     margin-bottom: 0;
     padding-left: 0.8rem;
+    padding-right: 2.8rem;
 }
 
 /* Sloka meaning (hidden by default in recitation mode) */
@@ -1052,6 +1068,7 @@ header.header-hidden ~ main {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
     padding-left: 0.8rem;
+    padding-right: 2.8rem;
     border-top: 1px solid var(--border-light);
     display: none; /* Hidden by default */
 }
@@ -1061,17 +1078,82 @@ body.show-meanings .sloka-meaning {
     display: block;
 }
 
-/* Currently playing sloka - bold and highlighted */
+/* Sloka speak button */
+.sloka-speak-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 3px solid var(--primary-gold);
+    border-radius: 50%;
+    width: 2.4rem;
+    height: 2.4rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-gold);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.15),
+        inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    padding-left: 2px;
+}
+
+.sloka-speak-btn:hover {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+    border-color: var(--accent-saffron);
+    color: var(--accent-saffron);
+    box-shadow: 
+        0 4px 8px rgba(255, 153, 51, 0.3),
+        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.sloka-speak-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.sloka-card.playing .sloka-speak-btn {
+    background: white;
+    border-color: white;
+    color: #E68A3C;
+    opacity: 1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Currently playing sloka - 3D gradient light orange background with dark text */
 .sloka-card.playing {
-    background: linear-gradient(135deg, var(--gold-lighter) 0%, var(--bg-white) 100%);
-    border-color: var(--primary-gold);
-    box-shadow: 0 8px 30px rgba(212, 160, 86, 0.3);
+    background: linear-gradient(145deg, #FFD9B3 0%, #FFAA66 40%, #FF8833 100%);
+    border-color: #FFCC99;
+    box-shadow: 
+        0 8px 30px rgba(255, 153, 68, 0.5),
+        inset 0 3px 6px rgba(255, 255, 255, 0.5),
+        inset 0 -3px 6px rgba(200, 100, 0, 0.2);
     transform: scale(1.02);
+}
+
+.sloka-card.playing::before {
+    display: none;
 }
 
 .sloka-card.playing .sloka-text {
     font-weight: 600;
-    color: var(--text-dark);
+    color: #3D2817;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.sloka-card.playing .sloka-number {
+    background: #3D2817;
+    color: #FFAA66;
+}
+
+.sloka-card.playing .sloka-meaning {
+    color: #3D2817;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 
 /* Next Sarga Link */
@@ -1093,16 +1175,6 @@ body.show-meanings .sloka-meaning {
 .next-sarga-link .next-sarga-name {
     font-weight: 600;
     text-decoration: underline;
-}
-
-.sloka-card.playing::before {
-    content: "▶";
-    position: absolute;
-    left: 0.3rem;
-    top: 1rem;
-    font-size: 1.5rem;
-    color: var(--accent-saffron);
-    animation: pulse 1.5s ease-in-out infinite;
 }
 
 /* Highlight sloka when returning from detail view */
@@ -1689,12 +1761,6 @@ footer p {
 
     .sloka-text {
         padding-left: 0.7rem;
-    }
-
-    .sloka-card.playing::before {
-        font-size: 1.2rem;
-        left: 0.2rem;
-        top: 0.8rem;
     }
 
     .next-sarga-link {

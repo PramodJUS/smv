@@ -7,6 +7,7 @@ let granthaDetailsLoading = false; // Track if currently loading
 let currentLanguage = 'sa';
 let currentView = 'list';
 let currentSloka = null; // Track current sloka being viewed
+let currentlyPlayingSloka = null; // Track sloka currently being recited {sarga, sloka_number}
 let searchDebounceTimer = null; // Debounce timer for search
 
 // Readability settings - larger default for recitation
@@ -18,8 +19,8 @@ let pratikaIdentifier = null;
 
 // Commentary visibility settings
 let visibleCommentaries = {
-    'Meaning - English': true,
-    'Meaning - Kannada': false,
+    'Meaning - English (AI - Generated)': true,
+    'Meaning - Kannada (AI - Generated)': false,
     'भावप्रकाशिका': true,
     'पदार्थदीपिकोद्बोधिका': true,
     'मन्दोपाकारिणी': true
@@ -369,7 +370,7 @@ function filterSlokas() {
     updateSectionTitle();
 }
 
-// Search slokas
+// Search slokas (searches across ALL cantos regardless of selection)
 function searchSlokas() {
     const searchTerm = searchInput.value.trim().toLowerCase();
     
@@ -378,6 +379,7 @@ function searchSlokas() {
         return;
     }
     
+    // Search across ALL slokas (all cantos)
     const searchResults = allSlokas.filter(sloka => {
         const cleanSlokaText = sloka.sloka_text.toLowerCase();
         
@@ -391,12 +393,39 @@ function searchSlokas() {
                sloka.sloka_number.toString().includes(searchTerm);
     });
     
+    // Update filteredSlokas so navigation works with search results
+    filteredSlokas = searchResults;
     displaySlokas(searchResults);
+}
+
+// Highlight search term in text with dark orange background
+function highlightSearchTerm(text, searchTerm) {
+    if (!searchTerm) return text;
+    
+    // Escape special regex characters in search term
+    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedTerm})`, 'gi');
+    
+    return text.replace(regex, '<span class="search-highlight">$1</span>');
 }
 
 // Display slokas
 function displaySlokas(slokas) {
     console.log('displaySlokas called with', slokas ? slokas.length : 0, 'slokas');
+
+    // Ensure we're in list view
+    if (slokaList) {
+        slokaList.style.display = 'flex';
+    }
+    if (slokaDetail) {
+        slokaDetail.style.display = 'none';
+    }
+    currentView = 'list';
+
+    // Re-enable sarga selector
+    if (sargaSelect) {
+        sargaSelect.disabled = false;
+    }
 
     if (!slokas || slokas.length === 0) {
         const lang = languages[currentLanguage] || languages['sa'];
@@ -405,6 +434,9 @@ function displaySlokas(slokas) {
     }
 
     slokaList.innerHTML = '';
+
+    // Get current search term for highlighting
+    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
     // Use document fragment for better performance
     const fragment = document.createDocumentFragment();
@@ -424,6 +456,11 @@ function displaySlokas(slokas) {
             }
         } catch (e) {
             console.error('Transliteration error:', e);
+        }
+
+        // Highlight search term if present
+        if (searchTerm) {
+            slokaText = highlightSearchTerm(slokaText, searchTerm);
         }
 
         // Get meaning based on current language
@@ -446,7 +483,26 @@ function displaySlokas(slokas) {
             <div class="sloka-number">${sargaPadded}-${slokaPadded}</div>
             <div class="sloka-text">${slokaText.replace(/\n/g, '<br>')}</div>
             ${meaning ? `<div class="sloka-meaning">${meaning}</div>` : ''}
+            <button class="sloka-speak-btn" title="Recite this sloka">▶</button>
         `;
+
+        // Add click handler for speak button
+        const speakBtn = slokaCard.querySelector('.sloka-speak-btn');
+        speakBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent opening detail view
+            
+            // If this button is showing stop, stop recitation
+            if (speakBtn.textContent === '⏹') {
+                stopRecitation();
+                return;
+            }
+            
+            // Stop any current recitation first
+            stopRecitation();
+            
+            // Start playing this sloka
+            playSingleSlokaFromList(sloka, slokaCard, speakBtn);
+        });
 
         slokaCard.addEventListener('click', () => showSlokaDetail(sloka));
         fragment.appendChild(slokaCard);
@@ -457,7 +513,6 @@ function displaySlokas(slokas) {
 
     // Add "Next Sarga" link if viewing a specific sarga and not the last one
     const currentSarga = parseInt(sargaSelect.value);
-    const searchTerm = searchInput ? searchInput.value.trim() : '';
 
     // Only show if not searching and not viewing the last sarga
     if (!searchTerm && currentSarga < 16) {
@@ -491,6 +546,21 @@ function displaySlokas(slokas) {
     }
 
     console.log('Display complete, cards added:', slokas.length);
+
+    // Restore playing state if a sloka was being recited
+    if (currentlyPlayingSloka && isPlayingAll) {
+        const playingCard = document.querySelector(
+            `.sloka-card[data-sarga="${currentlyPlayingSloka.sarga}"][data-sloka="${currentlyPlayingSloka.sloka_number}"]`
+        );
+        if (playingCard) {
+            playingCard.classList.add('playing');
+            const speakBtn = playingCard.querySelector('.sloka-speak-btn');
+            if (speakBtn) {
+                speakBtn.textContent = '⏹';
+                speakBtn.title = 'Stop recitation';
+            }
+        }
+    }
 }
 
 // Show sloka detail
@@ -530,8 +600,8 @@ async function showSlokaDetail(sloka) {
     let commentariesHTML = '';
     let commentaryIndex = 0;
     const commentaryNames = {
-        'Meaning - English': 'Meaning - English',
-        'Meaning - Kannada': 'Meaning - Kannada',
+        'Meaning - English (AI - Generated)': 'Meaning - English (AI - Generated)',
+        'Meaning - Kannada (AI - Generated)': 'Meaning - Kannada (AI - Generated)',
         'भावप्रकाशिका': 'Bhavaprakashika',
         'पदार्थदीपिकोद्बोधिका': 'Padarthadeepikodbhodhika',
         'मन्दोपाकारिणी': 'Mandopakarini'
@@ -594,10 +664,12 @@ async function showSlokaDetail(sloka) {
             const commentaryId = `commentary-${englishName.toLowerCase().replace(/\s+/g, '-')}`;
             const alternateClass = commentaryIndex % 2 === 0 ? 'commentary-even' : 'commentary-odd';
 
+            // Only show English name in parentheses if different from devanagari name
+            const headingText = devanagariName === englishName ? devanagariName : `${devanagariName} (${englishName})`;
             commentariesHTML += `
                 <div class="detail-commentary ${alternateClass}">
                     <div class="sloka-header">
-                        <h3>${devanagariName} (${englishName})</h3>
+                        <h3>${headingText}</h3>
                     </div>
                     <div class="commentary-text-wrapper" id="${commentaryId}">
                         <p class="commentary-text">${commentaryText.replace(/\n/g, '<br>')}</p>
@@ -629,24 +701,24 @@ async function showSlokaDetail(sloka) {
                         </label>
                         <div class="commentary-divider"></div>
                         <label class="commentary-checkbox">
-                            <input type="checkbox" class="commentary-check" data-commentary="Meaning - English">
-                            📖 Meaning - English
+                            <input type="checkbox" class="commentary-check" data-commentary="Meaning - English (AI - Generated)">
+                            📖 Meaning - English (...
                         </label>
                         <label class="commentary-checkbox">
-                            <input type="checkbox" class="commentary-check" data-commentary="Meaning - Kannada">
-                            📖 Meaning - Kannada
+                            <input type="checkbox" class="commentary-check" data-commentary="Meaning - Kannada (AI - Generated)">
+                            📖 Meaning - Kannada (...
                         </label>
                         <label class="commentary-checkbox">
                             <input type="checkbox" class="commentary-check" data-commentary="भावप्रकाशिका">
-                            भावप्रकाशिका (Bhavaprakashika)
+                            भावप्रकाशिका (Bhavap...
                         </label>
                         <label class="commentary-checkbox">
                             <input type="checkbox" class="commentary-check" data-commentary="पदार्थदीपिकोद्बोधिका">
-                            पदार्थदीपिकोद्बोधिका (Padarthadeepikodbhodhika)
+                            पदार्थदीपिकोद्बोधिका...
                         </label>
                         <label class="commentary-checkbox">
                             <input type="checkbox" class="commentary-check" data-commentary="मन्दोपाकारिणी">
-                            मन्दोपाकारिणी (Mandopakarini)
+                            मन्दोपाकारिणी (Mando...
                         </label>
                     </div>
                 </div>
@@ -863,15 +935,29 @@ function playAllSlokas() {
         const sloka = filteredSlokas[currentIndex];
         console.log(`Playing sloka ${currentIndex + 1}/${filteredSlokas.length}`);
         
+        // Track currently playing sloka globally
+        currentlyPlayingSloka = { sarga: sloka.sarga, sloka_number: sloka.sloka_number };
+        
         // Remove previous highlight
         document.querySelectorAll('.sloka-card.playing').forEach(card => {
             card.classList.remove('playing');
         });
         
-        // Highlight current sloka
+        // Reset all speak buttons
+        document.querySelectorAll('.sloka-speak-btn').forEach(btn => {
+            btn.textContent = '▶';
+            btn.title = 'Recite this sloka';
+        });
+        
+        // Highlight current sloka and update its speak button
         const currentCard = document.querySelector(`[data-sarga="${sloka.sarga}"][data-sloka="${sloka.sloka_number}"]`);
         if (currentCard) {
             currentCard.classList.add('playing');
+            const speakBtn = currentCard.querySelector('.sloka-speak-btn');
+            if (speakBtn) {
+                speakBtn.textContent = '⏹';
+                speakBtn.title = 'Stop recitation';
+            }
             // Scroll into view smoothly
             currentCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -929,6 +1015,98 @@ function playAllSlokas() {
     }
     
     playNext();
+}
+
+// Play single sloka from list view (with card highlighting)
+function playSingleSlokaFromList(sloka, slokaCard, speakBtn) {
+    if (!sloka) return;
+
+    // Track currently playing sloka
+    currentlyPlayingSloka = { sarga: sloka.sarga, sloka_number: sloka.sloka_number };
+
+    // Remove playing class from all cards and reset all speak buttons
+    document.querySelectorAll('.sloka-card.playing').forEach(card => {
+        card.classList.remove('playing');
+    });
+    document.querySelectorAll('.sloka-speak-btn').forEach(btn => {
+        btn.textContent = '▶';
+        btn.title = 'Recite this sloka';
+    });
+
+    // Add playing class to this card
+    slokaCard.classList.add('playing');
+    
+    // Change button to stop
+    if (speakBtn) {
+        speakBtn.textContent = '⏹';
+        speakBtn.title = 'Stop recitation';
+    }
+
+    isPlayingAll = true;
+
+    // Show stop button, hide play button
+    const playBtn = document.getElementById('headingAudioBtn');
+    const stopBtn = document.getElementById('stopAudioBtn');
+    if (playBtn) playBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'inline-block';
+
+    console.log(`Playing sloka ${sloka.sarga}.${sloka.sloka_number} from list`);
+
+    // Try MP3 first
+    const audioPath = `audio/${sloka.sarga}-${sloka.sloka_number}.mp3`;
+    currentAudio = new Audio(audioPath);
+
+    currentAudio.onloadeddata = () => {
+        console.log('Playing MP3:', audioPath);
+        currentAudio.play().then(() => {
+            currentAudio.onended = () => {
+                console.log('Finished playing sloka');
+                slokaCard.classList.remove('playing');
+                stopRecitation();
+            };
+        }).catch(err => {
+            console.error('MP3 playback error:', err);
+            currentAudio = null;
+            useSpeechSynthesisForSingleFromList(sloka, slokaCard);
+        });
+    };
+
+    currentAudio.onerror = () => {
+        console.log('MP3 not found, using TTS');
+        currentAudio = null;
+        useSpeechSynthesisForSingleFromList(sloka, slokaCard);
+    };
+
+    currentAudio.load();
+}
+
+// Use TTS for single sloka from list
+function useSpeechSynthesisForSingleFromList(sloka, slokaCard) {
+    if (!('speechSynthesis' in window)) {
+        alert('Speech synthesis not supported');
+        slokaCard.classList.remove('playing');
+        stopRecitation();
+        return;
+    }
+
+    const text = sloka.sloka_text.replace(/<BR>/gi, ' ').replace(/[॥।]/g, '');
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'hi-IN';
+    utterance.rate = 0.8;
+
+    utterance.onend = () => {
+        console.log('TTS finished');
+        slokaCard.classList.remove('playing');
+        stopRecitation();
+    };
+
+    utterance.onerror = () => {
+        console.error('TTS error');
+        slokaCard.classList.remove('playing');
+        stopRecitation();
+    };
+
+    window.speechSynthesis.speak(utterance);
 }
 
 // Play single sloka (for detail view)
@@ -996,6 +1174,7 @@ function playSingleSloka(sloka) {
 // Stop recitation
 function stopRecitation() {
     isPlayingAll = false;
+    currentlyPlayingSloka = null; // Clear tracking
     window.speechSynthesis.cancel();
 
     // Stop and clear current audio if it exists
@@ -1008,6 +1187,12 @@ function stopRecitation() {
     // Remove highlight from all slokas
     document.querySelectorAll('.sloka-card.playing').forEach(card => {
         card.classList.remove('playing');
+    });
+
+    // Reset all speak buttons to speaker icon
+    document.querySelectorAll('.sloka-speak-btn').forEach(btn => {
+        btn.textContent = '▶';
+        btn.title = 'Recite this sloka';
     });
 
     // Show play button, hide stop button
@@ -1039,7 +1224,7 @@ function toggleInfoPanel() {
 function goToHome() {
     if (currentView === 'detail') {
         slokaDetail.style.display = 'none';
-        slokaList.style.display = 'block';
+        slokaList.style.display = 'flex';
         currentView = 'list';
         currentSloka = null;
 
@@ -1205,7 +1390,7 @@ function setupKeyboardShortcuts() {
         // Escape to go back to list
         if (e.key === 'Escape') {
             slokaDetail.style.display = 'none';
-            slokaList.style.display = 'block';
+            slokaList.style.display = 'flex';
             currentView = 'list';
             currentSloka = null;
             e.preventDefault();
