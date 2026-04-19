@@ -362,8 +362,6 @@ function parseCSV(csvText) {
 // Filter slokas by sarga
 function filterSlokas() {
     const selectedSarga = parseInt(sargaSelect.value);
-    console.log('Filtering for sarga:', selectedSarga);
-    console.log('Total slokas:', allSlokas.length);
     filteredSlokas = allSlokas.filter(sloka => sloka.sarga === selectedSarga);
     console.log('Filtered slokas:', filteredSlokas.length);
     displaySlokas(filteredSlokas);
@@ -411,7 +409,6 @@ function highlightSearchTerm(text, searchTerm) {
 
 // Display slokas
 function displaySlokas(slokas) {
-    console.log('displaySlokas called with', slokas ? slokas.length : 0, 'slokas');
 
     // Ensure we're in list view
     if (slokaList) {
@@ -782,6 +779,10 @@ async function showSlokaDetail(sloka) {
     const backToListBtn = document.getElementById('backToListBtn');
     if (backToListBtn) {
         backToListBtn.addEventListener('click', () => {
+            // Store sloka reference before clearing
+            const returnToSarga = sloka.sarga;
+            const returnToSlokaNumber = sloka.sloka_number;
+
             // Hide detail view and show list
             slokaDetail.style.display = 'none';
             slokaList.style.display = 'flex';
@@ -792,14 +793,17 @@ async function showSlokaDetail(sloka) {
                 sargaSelect.disabled = false;
             }
 
-            // Find and scroll to the current sloka card in the list
-            const targetCard = document.querySelector(
-                `.sloka-card[data-sarga="${sloka.sarga}"][data-sloka="${sloka.sloka_number}"]`
-            );
+            // Re-render list to apply any language changes made in detail view
+            filterSlokas();
 
-            if (targetCard) {
-                // Scroll to the card after a short delay to ensure list is visible
-                setTimeout(() => {
+            // Find and scroll to the current sloka card in the list
+            // Use setTimeout to ensure DOM is updated after filterSlokas
+            setTimeout(() => {
+                const targetCard = document.querySelector(
+                    `.sloka-card[data-sarga="${returnToSarga}"][data-sloka="${returnToSlokaNumber}"]`
+                );
+
+                if (targetCard) {
                     targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
                     // Highlight the card briefly
@@ -807,8 +811,8 @@ async function showSlokaDetail(sloka) {
                     setTimeout(() => {
                         targetCard.classList.remove('highlight-sloka');
                     }, 2000);
-                }, 100);
-            }
+                }
+            }, 100);
 
             currentSloka = null;
         });
@@ -1518,6 +1522,8 @@ function setupKeyboardShortcuts() {
             slokaList.style.display = 'flex';
             currentView = 'list';
             currentSloka = null;
+            // Re-render list to apply any language changes made in detail view
+            filterSlokas();
             e.preventDefault();
         }
     });
